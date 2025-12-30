@@ -50,9 +50,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.WORKFLOW_ACTION_TOKEN }}
         with:
           minor-wording: "MINOR,minor"
-          major-wording: "MAJOR,cut-major"
-          patch-wording: "patch,fixes,fix,add,Adds,new,feat,feature"
-          rc-wording: "RELEASE,alpha"
+          major-wording: "MAJOR,major"
+          patch-wording: "PATCH,patch"
           commit-message: "CI: bumps version to {{version}} [skip actions]"
       - name: Install Dependencies
         run: npm ci --ignore-scripts
