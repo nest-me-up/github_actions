@@ -1,0 +1,43 @@
+name: build
+on:
+  workflow_call:
+    secrets:
+      WORKFLOW_ACTION_TOKEN:
+        required: true
+      MONITORING_SLACK_WEBHOOK_URL:
+        required: false
+jobs:
+  build:
+    name: Build Node Project
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK: ${{ secrets.MONITORING_SLACK_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.WORKFLOW_ACTION_TOKEN }}
+      - uses: actions/setup-node@v6
+        with:
+          registry-url: "https://npm.pkg.github.com"
+          node-version: 24
+      - name: Install Dependencies
+        run: npm ci --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.WORKFLOW_ACTION_TOKEN }}
+      - name: Build
+        run: npm run build
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.WORKFLOW_ACTION_TOKEN }}
+      - name: Lint
+        run: npm run lint
+      - name: Unit Test
+        run: npm run test:ci
+      - name: Report Status
+        if: failure() && env.SLACK_WEBHOOK != ''
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ env.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_TITLE: "Build Failed"
+          SLACK_MESSAGE: "${{ github.workflow }} failed in ${{ github.repository }}"
+          SLACK_FOOTER: "Link to Repo <${{ github.server_url }}/${{ github.repository }}|${{ github.repository }}>"
